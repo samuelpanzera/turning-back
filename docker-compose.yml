@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=turning_back_user
+      - DB_PASSWORD=turning_back_pass
+      - DB_NAME=turning_back_db
+      - DB_SSL_MODE=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - turning-back-network
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: turning_back_user
+      POSTGRES_PASSWORD: turning_back_pass
+      POSTGRES_DB: turning_back_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U turning_back_user -d turning_back_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - turning-back-network
+    restart: unless-stopped
+
+  # Development tools (optional)
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8081:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
+    networks:
+      - turning-back-network
+    profiles:
+      - dev
+
+volumes:
+  postgres_data:
+
+networks:
+  turning-back-network:
+    driver: bridge
