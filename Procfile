@@ -1,1 +1,1 @@
-web: ./bin/turning-back
+web: turning-back
