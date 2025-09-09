@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 	"github.com/samuelpanzera/turning-back/adapter/input/controller"
@@ -22,7 +23,10 @@ func main() {
 		logger.Warn("No .env file found")
 	}
 
-	databaseConnection := database.NewDatabaseConnection()
+	databaseConnection, err := database.NewDatabaseConnection()
+	if err != nil {
+		log.Fatal("Error connecting to database:", err)
+	}
 	userController := initDependencies(databaseConnection)
 
 	inputPort := routes.NewInputPort(getPort())
@@ -40,8 +44,11 @@ func getPort() int {
 		return 8080
 	}
 
-	var portInt int
-	fmt.Sscanf(port, "%d", &portInt)
+	portInt, err := strconv.Atoi(port)
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Invalid PORT value '%s', using default 8080", port))
+		return 8080
+	}
 	return portInt
 }
 

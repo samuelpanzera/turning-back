@@ -11,6 +11,7 @@ import (
 	"github.com/samuelpanzera/turning-back/application/port/input"
 	"github.com/samuelpanzera/turning-back/configuration/logger"
 	"github.com/samuelpanzera/turning-back/configuration/rest_errors"
+	"github.com/samuelpanzera/turning-back/configuration/validation"
 )
 
 func (oc *orcamentoControllerInterface) CreateOrcamento(c *gin.Context) {
@@ -20,7 +21,7 @@ func (oc *orcamentoControllerInterface) CreateOrcamento(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&orcamentoRequest); err != nil {
 		logger.Error("Error trying to validate orcamento info")
-		restErr := rest_errors.NewBadRequestError("Invalid request data")
+		restErr := validation.ValidateUserError(err)
 		c.JSON(restErr.Code, restErr)
 		return
 	}

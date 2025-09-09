@@ -16,9 +16,9 @@ var (
 	database *gorm.DB
 )
 
-func NewDatabaseConnection() *gorm.DB {
+func NewDatabaseConnection() (*gorm.DB, error) {
 	if database != nil {
-		return database
+		return database, nil
 	}
 
 	var err error
@@ -48,20 +48,20 @@ func NewDatabaseConnection() *gorm.DB {
 		database, err = connectSQLite()
 	default:
 		logger.Error(fmt.Sprintf("Unsupported database type: %s", dbType))
-		panic(fmt.Sprintf("Unsupported database type: %s", dbType))
+		return nil, fmt.Errorf("unsupported database type: %s", dbType)
 	}
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if err := database.AutoMigrate(&entity.OrcamentoEntity{}); err != nil {
 		logger.Error("Error running auto migration")
-		panic(err)
+		return nil, fmt.Errorf("error running auto migration: %w", err)
 	}
 	logger.Info("Database migration completed successfully")
 
-	return database
+	return database, nil
 }
 
 func connectPostgreSQL() (*gorm.DB, error) {
